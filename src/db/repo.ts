@@ -3,13 +3,15 @@
 
 import { getDB } from './schema';
 import type {
+  DreamEntry,
+  DreamQuery,
   EntryQuery,
   RecordEntry,
   RecordExport,
   Settings,
 } from './schema';
 
-const RECORD_VERSION = 1;
+const RECORD_VERSION = 2;
 
 // --- Entries -----------------------------------------------------------------
 
@@ -57,6 +59,60 @@ export async function queryEntries(q: EntryQuery = {}): Promise<RecordEntry[]> {
         e.notes.toLowerCase().includes(needle) ||
         e.technique.toLowerCase().includes(needle) ||
         e.tags.some((t) => t.toLowerCase().includes(needle)),
+    );
+  }
+
+  list = q.order === 'asc' ? list : list.reverse();
+  if (q.limit != null) list = list.slice(0, q.limit);
+  return list;
+}
+
+// --- Dreams ------------------------------------------------------------------
+
+export async function putDream(dream: DreamEntry): Promise<void> {
+  const db = await getDB();
+  await db.put('dreams', dream);
+}
+
+export async function getDream(id: string): Promise<DreamEntry | undefined> {
+  const db = await getDB();
+  return db.get('dreams', id);
+}
+
+export async function deleteDream(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete('dreams', id);
+}
+
+/** All dreams, sorted by timestamp. */
+export async function allDreams(order: 'asc' | 'desc' = 'desc'): Promise<DreamEntry[]> {
+  const db = await getDB();
+  const list = await db.getAllFromIndex('dreams', 'by-timestamp');
+  return order === 'desc' ? list.reverse() : list;
+}
+
+/** Filtered query. Range from the index; tags/text/lucid filtered in memory
+ *  (the dataset is personal-scale, so this stays cheap). */
+export async function queryDreams(q: DreamQuery = {}): Promise<DreamEntry[]> {
+  const db = await getDB();
+  const range =
+    q.from != null || q.to != null
+      ? IDBKeyRange.bound(q.from ?? -Infinity, q.to ?? Infinity)
+      : undefined;
+  let list = await db.getAllFromIndex('dreams', 'by-timestamp', range);
+
+  if (q.lucid) list = list.filter((d) => d.lucid);
+  if (q.tags && q.tags.length) {
+    const want = new Set(q.tags);
+    list = list.filter((d) => d.tags.some((t) => want.has(t)));
+  }
+  if (q.text) {
+    const needle = q.text.toLowerCase();
+    list = list.filter(
+      (d) =>
+        d.title.toLowerCase().includes(needle) ||
+        d.body.toLowerCase().includes(needle) ||
+        d.tags.some((t) => t.toLowerCase().includes(needle)),
     );
   }
 
@@ -115,7 +171,8 @@ export async function saveSettings(patch: Partial<Settings>): Promise<Settings> 
 
 export async function exportRecord(): Promise<RecordExport> {
   const entries = await allEntries('asc');
-  return { app: 'athanor', version: RECORD_VERSION, exportedAt: Date.now(), entries };
+  const dreams = await allDreams('asc');
+  return { app: 'athanor', version: RECORD_VERSION, exportedAt: Date.now(), entries, dreams };
 }
 
 export type ImportMode = 'merge' | 'replace';
@@ -131,19 +188,26 @@ export async function importRecord(data: unknown, mode: ImportMode = 'merge'): P
     throw new Error('Not a valid Athanor export file.');
   }
   const incoming = (data as RecordExport).entries.filter(isEntryLike);
+  const incomingDreams = ((data as RecordExport).dreams ?? []).filter(isEntryLike);
   const db = await getDB();
-  const tx = db.transaction('entries', 'readwrite');
-  if (mode === 'replace') await tx.store.clear();
-  for (const e of incoming) await tx.store.put(e);
+  const tx = db.transaction(['entries', 'dreams'], 'readwrite');
+  const entryStore = tx.objectStore('entries');
+  const dreamStore = tx.objectStore('dreams');
+  if (mode === 'replace') {
+    await entryStore.clear();
+    await dreamStore.clear();
+  }
+  for (const e of incoming) await entryStore.put(e);
+  for (const d of incomingDreams) await dreamStore.put(d as DreamEntry);
   await tx.done;
-  return incoming.length;
+  return incoming.length + incomingDreams.length;
 }
 
-function isEntryLike(e: unknown): e is RecordEntry {
+function isEntryLike<T extends { id: string; timestamp: number }>(e: unknown): e is T {
   return (
     !!e &&
     typeof e === 'object' &&
-    typeof (e as RecordEntry).id === 'string' &&
-    typeof (e as RecordEntry).timestamp === 'number'
+    typeof (e as T).id === 'string' &&
+    typeof (e as T).timestamp === 'number'
   );
 }

@@ -61,6 +61,35 @@ export interface RecordEntry {
   updatedAt: number;
 }
 
+/** One night's dream in the Dream Diary. Kept separate from RecordEntry: a
+ *  dream is a narrative (title + body) anchored to a date, not a timed session.
+ *  Astrological `context` is denormalised on, like RecordEntry, so old dreams
+ *  keep their sky even if the timing libs change. */
+export interface DreamEntry {
+  /** uuid (crypto.randomUUID). */
+  id: string;
+  /** Epoch ms — the night/morning of the dream. Primary sort + range key. */
+  timestamp: number;
+  /** Short title / one-line summary. */
+  title: string;
+  /** The dream narrative (free text). */
+  body: string;
+  /** Open tag set (e.g. "flying", "water", "recurring"). */
+  tags: string[];
+  /** Whether the dream was lucid. */
+  lucid?: boolean;
+  /** Optional astrological context snapshot at the dream's date. */
+  context?: {
+    moonPhase?: number; // 0..1
+    moonIllumination?: number; // 0..1
+    planetaryHourRuler?: string;
+    dayRuler?: string;
+  };
+  /** Audit. */
+  createdAt: number;
+  updatedAt: number;
+}
+
 /** App-wide preferences (single-row store). */
 export interface Settings {
   id: 'app';
@@ -115,6 +144,15 @@ export interface AthanorDB extends DBSchema {
       'by-tag': string;
     };
   };
+  dreams: {
+    key: string; // DreamEntry.id
+    value: DreamEntry;
+    indexes: {
+      'by-timestamp': number;
+      // multiEntry index over tags, for fast tag filtering.
+      'by-tag': string;
+    };
+  };
   settings: {
     key: string; // 'app'
     value: Settings;
@@ -122,19 +160,26 @@ export interface AthanorDB extends DBSchema {
 }
 
 const DB_NAME = 'athanor';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbp: Promise<IDBPDatabase<AthanorDB>> | null = null;
 
 export function getDB(): Promise<IDBPDatabase<AthanorDB>> {
   if (!dbp) {
     dbp = openDB<AthanorDB>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
-        const entries = db.createObjectStore('entries', { keyPath: 'id' });
-        entries.createIndex('by-timestamp', 'timestamp');
-        entries.createIndex('by-technique', 'technique');
-        entries.createIndex('by-tag', 'tags', { multiEntry: true });
-        db.createObjectStore('settings', { keyPath: 'id' });
+      upgrade(db, oldVersion) {
+        if (oldVersion < 1) {
+          const entries = db.createObjectStore('entries', { keyPath: 'id' });
+          entries.createIndex('by-timestamp', 'timestamp');
+          entries.createIndex('by-technique', 'technique');
+          entries.createIndex('by-tag', 'tags', { multiEntry: true });
+          db.createObjectStore('settings', { keyPath: 'id' });
+        }
+        if (oldVersion < 2) {
+          const dreams = db.createObjectStore('dreams', { keyPath: 'id' });
+          dreams.createIndex('by-timestamp', 'timestamp');
+          dreams.createIndex('by-tag', 'tags', { multiEntry: true });
+        }
       },
     });
   }
@@ -153,9 +198,22 @@ export type EntryQuery = {
   order?: 'asc' | 'desc';
 };
 
+/** Filter for the Dream Diary. Range from the index; tags/text in memory. */
+export type DreamQuery = {
+  from?: number; // epoch ms inclusive
+  to?: number; // epoch ms inclusive
+  tags?: string[]; // match any
+  text?: string; // title/body/tag substring (in-memory filter)
+  lucid?: boolean; // only lucid dreams when true
+  limit?: number;
+  order?: 'asc' | 'desc';
+};
+
 export interface RecordExport {
   app: 'athanor';
   version: number;
   exportedAt: number;
   entries: RecordEntry[];
+  /** Dream Diary entries (added in export v2; optional for backward compat). */
+  dreams?: DreamEntry[];
 }
