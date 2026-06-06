@@ -284,6 +284,54 @@ input[type='checkbox'] { accent-color: var(--accent); width: auto; }
   font-size: 0.8rem;
 }
 
+/* --- Monochord (drone) --- */
+.drone-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 38vh;
+  text-align: center;
+}
+.drone-orb {
+  width: 44vw;
+  max-width: 220px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+.drone-orb__ring {
+  width: 62%;
+  height: 62%;
+  border-radius: 50%;
+  border: 1px solid var(--accent-dim);
+  opacity: 0.4;
+  transition: opacity 1s ease, transform 1s ease;
+}
+/* A slow, never-resting pulse while the drone sounds. */
+.drone-orb--on { border-color: var(--accent-dim); }
+.drone-orb--on .drone-orb__ring {
+  opacity: 1;
+  animation: drone-pulse 7s ease-in-out infinite;
+}
+@keyframes drone-pulse {
+  0%, 100% { transform: scale(0.86); opacity: 0.45; }
+  50% { transform: scale(1.12); opacity: 0.95; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .drone-orb--on .drone-orb__ring { animation: none; opacity: 0.8; }
+}
+.drone-root {
+  font-family: var(--font-ui);
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  font-size: 1.1rem;
+}
+
 /* --- Entry list --- */
 .entry {
   border: 1px solid var(--line);

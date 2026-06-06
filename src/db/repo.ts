@@ -77,6 +77,16 @@ const DEFAULT_SETTINGS: Settings = {
     hapticsEnabled: true,
   },
   dismissedHints: [],
+  drone: {
+    tuning: 'just',
+    rootPlanet: 'Saturn',
+    attuneToHour: false,
+    moonBrightness: false,
+    volume: 0.45,
+    density: 0.5,
+    brightness: 0.45,
+    motion: 0.4,
+  },
 };
 
 export async function getSettings(): Promise<Settings> {
@@ -93,6 +103,7 @@ export async function saveSettings(patch: Partial<Settings>): Promise<Settings> 
     id: 'app',
     cues: patch.cues ? { ...current.cues!, ...patch.cues } : current.cues,
     breath: patch.breath ? { ...current.breath, ...patch.breath } : current.breath,
+    drone: patch.drone ? { ...current.drone, ...patch.drone } : current.drone,
   };
   const db = await getDB();
   await db.put('settings', next);

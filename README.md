@@ -20,6 +20,12 @@ described below:
   plus a custom-ratio builder; Web Audio tone cues (rising/steady/falling),
   optional spoken cues, haptics; AudioContext unlock + Screen Wake Lock on
   start; one-time iOS silent-switch hint; "log to Record" after a session.
+- **Monochord** — an astro-tuned ambient drone, synthesised entirely with Web
+  Audio oscillators (no hosted audio). Root is a planetary tone (Cousto "Cosmic
+  Octave"), optionally following the live planetary-hour ruler; overtones stack
+  by tuning system (just / Pythagorean / equal / planetary); brightness can be
+  driven by lunar illumination. Long fades, slow beating + drift, Screen Wake
+  Lock while sounding, and "log to Record" after a sitting.
 - **Record** — IndexedDB diary with the schema below; new/edit/delete; search +
   tag filters; streak + contribution-style heatmap; JSON export/import.
 - **Timing** — moon phase/illumination, current planetary hour + day ruler, and
@@ -29,7 +35,7 @@ described below:
   always-present Copy fallback. No network calls, no keys.
 
 ```bash
-npm test     # vitest — prompt-builder determinism/shape
+npm test     # vitest — prompt-builder + Monochord tuning determinism/shape
 ```
 
 ## Stack
@@ -113,6 +119,10 @@ athanor/
         ├── breath/          # animated guide, Web Audio/Speech cues, haptics,
         │   ├── breath.ts    #   wake lock, iOS silent-switch hint
         │   └── patterns.ts  # pattern definitions (box, 4-7-8, coherent, …)
+        ├── drone/           # the Monochord: astro-tuned ambient drone
+        │   ├── drone.ts     #   UI: tuning/root/couplings, transport, log offer
+        │   ├── engine.ts    #   Web Audio graph: fades, beating, drift, wake lock
+        │   └── tuning.ts    # PURE harmony (planetary tones → partials), unit-tested
         ├── record/record.ts # IndexedDB diary: list/search/calendar/export
         ├── timing/timing.ts # suncalc moon + planetary hours (Chaldean)
         └── ai/hierophant.ts # scope picker + intents → Web Share / Copy egress
@@ -170,6 +180,9 @@ Claude needs a one-time "Ask Claude" Shortcut.
 
 ## Non-goals (v1)
 
-Ambient/drone soundscapes (functional breath cues *are* in scope), direct API
-calls / stored keys, accounts / sync / cloud, pathworking, scrying, ceremonial
-rituals, social features.
+Direct API calls / stored keys, accounts / sync / cloud, pathworking, scrying,
+ceremonial rituals, social features.
+
+> The original v1 non-goal of "ambient/drone soundscapes" has since shipped as
+> the **Monochord** module — still synthesised, static, and offline (no hosted
+> audio), in keeping with the constraints above.
