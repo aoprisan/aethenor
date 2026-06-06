@@ -21,7 +21,15 @@ export default defineConfig({
       // Scope/start_url are resolved against `base` by the plugin, but we set
       // them explicitly to make the subdirectory contract unmistakable.
       scope: BASE,
-      includeAssets: ['icon.svg', 'icon-maskable.svg', 'favicon.svg'],
+      includeAssets: [
+        'favicon.svg',
+        'icon.svg',
+        'icon-maskable.svg',
+        'icon-192.png',
+        'icon-512.png',
+        'icon-512-maskable.png',
+        'apple-touch-icon.png',
+      ],
       manifest: {
         name: 'Athanor',
         short_name: 'Athanor',
@@ -34,10 +42,30 @@ export default defineConfig({
         scope: BASE,
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#0a0a0c',
-        theme_color: '#0a0a0c',
+        background_color: '#0c0a09',
+        theme_color: '#0c0a09',
         categories: ['lifestyle', 'health', 'education'],
+        // Raster PNGs for broad install support (iOS/older Android), plus the
+        // scalable gilded SVGs for crisp rendering everywhere they're honoured.
         icons: [
+          {
+            src: 'icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any',
+          },
+          {
+            src: 'icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any',
+          },
+          {
+            src: 'icon-512-maskable.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
           {
             src: 'icon.svg',
             sizes: 'any',

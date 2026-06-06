@@ -1,10 +1,34 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Athanor">
-  <rect width="512" height="512" fill="#0a0a0c"/>
-  <!-- Maskable: keep the glyph inside the 80% safe zone (centered, ~r150). -->
-  <g fill="none" stroke="#c9a24b" stroke-width="9" transform="translate(256 256) scale(0.62) translate(-256 -256)">
-    <circle cx="256" cy="256" r="168"/>
-    <rect x="150" y="150" width="212" height="212"/>
-    <circle cx="256" cy="256" r="118"/>
-    <polygon points="256,150 362,362 150,362"/>
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f0d089"/>
+      <stop offset="0.5" stop-color="#d4a94e"/>
+      <stop offset="1" stop-color="#7e6230"/>
+    </linearGradient>
+    <radialGradient id="ember" cx="0.5" cy="0.52" r="0.5">
+      <stop offset="0" stop-color="#d4a94e" stop-opacity="0.2"/>
+      <stop offset="0.6" stop-color="#9a6f2e" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="stone" cx="0.4" cy="0.36" r="0.7">
+      <stop offset="0" stop-color="#f6dca0"/>
+      <stop offset="0.55" stop-color="#d4a94e"/>
+      <stop offset="1" stop-color="#8a6a32"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Full-bleed background; glyph kept inside the maskable safe zone (~66%). -->
+  <rect width="512" height="512" fill="#0c0a09"/>
+  <rect width="512" height="512" fill="url(#ember)"/>
+
+  <g transform="translate(256 256) scale(0.66) translate(-256 -256)">
+    <g fill="none" stroke="url(#gold)" stroke-width="11" stroke-linejoin="round">
+      <circle cx="256" cy="256" r="170"/>
+      <rect x="148" y="148" width="216" height="216" rx="2"/>
+      <polygon points="256,146 364,366 148,366"/>
+      <circle cx="256" cy="256" r="116"/>
+    </g>
+    <circle cx="256" cy="256" r="18" fill="url(#stone)"/>
+    <circle cx="256" cy="256" r="30" fill="none" stroke="url(#gold)" stroke-width="4" opacity="0.7"/>
   </g>
 </svg>

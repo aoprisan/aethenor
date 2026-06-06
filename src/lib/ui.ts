@@ -13,10 +13,14 @@ export function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
-/** Standard page header: title + lede. */
+/** Standard page header: title + lede + a gilded divider. */
 export function page(title: string, lede: string): DocumentFragment {
   const frag = document.createDocumentFragment();
-  frag.append(el('h1', {}, title), el('p', { className: 'page__lede' }, lede));
+  frag.append(
+    el('h1', {}, title),
+    el('p', { className: 'page__lede' }, lede),
+    el('div', { className: 'rule' }),
+  );
   return frag;
 }
 
