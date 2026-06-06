@@ -82,6 +82,12 @@ export interface Settings {
     /** Custom pattern durations (seconds); 0 = phase omitted. */
     custom?: { inhale: number; holdIn: number; exhale: number; holdOut: number };
   };
+  /** Candle (Trāṭaka) module preferences. */
+  candle?: {
+    lastRitualId?: string;
+    /** Custom watch: gaze/rest seconds + round count. */
+    custom?: { gazeSec: number; restSec: number; rounds: number };
+  };
 }
 
 export interface AthanorDB extends DBSchema {

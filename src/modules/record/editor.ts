@@ -7,6 +7,7 @@ import type { RecordEntry, RetentionCount } from '../../db/schema';
 import { snapshot } from '../timing/astro';
 import { resolveLocation } from '../../lib/location';
 import { PATTERNS } from '../breath/patterns';
+import { CANDLE_RITUALS } from '../candle/rituals';
 import { button, card, el, field } from '../../lib/ui';
 
 export interface EntryPrefill {
@@ -39,6 +40,7 @@ export function entryEditor(opts: {
 
   const techList = el('datalist', { id: 'tech-list' });
   for (const p of PATTERNS) techList.append(el('option', { value: p.name }));
+  for (const r of CANDLE_RITUALS) techList.append(el('option', { value: r.name }));
   techList.append(el('option', { value: 'Free practice' }));
   const technique = el('input', { type: 'text', placeholder: 'Technique' });
   technique.setAttribute('list', 'tech-list');
