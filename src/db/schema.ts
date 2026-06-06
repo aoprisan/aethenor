@@ -82,6 +82,20 @@ export interface Settings {
     /** Custom pattern durations (seconds); 0 = phase omitted. */
     custom?: { inhale: number; holdIn: number; exhale: number; holdOut: number };
   };
+  /** Monochord (drone) preferences. Typed loosely to keep `db` free of any
+   *  dependency on the timing / drone modules (cf. `context.*` above). */
+  drone?: {
+    tuning?: string; // TuningSystem
+    rootPlanet?: string; // Planet
+    /** Follow the live planetary-hour ruler instead of the fixed root. */
+    attuneToHour?: boolean;
+    /** Drive brightness from lunar illumination (new = dark, full = bright). */
+    moonBrightness?: boolean;
+    volume?: number; // 0..1
+    density?: number; // 0..1
+    brightness?: number; // 0..1
+    motion?: number; // 0..1
+  };
 }
 
 export interface AthanorDB extends DBSchema {
