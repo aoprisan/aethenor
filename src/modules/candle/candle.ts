@@ -150,11 +150,11 @@ export function renderCandle(root: HTMLElement): (() => void) | void {
     );
 
     // --- stage ---
-    const flame = el('div', { className: 'candle__flame' });
     const glow = el('div', { className: 'candle__glow' });
+    const flame = el('div', { className: 'candle__flame' }, el('div', { className: 'candle__core' }));
     const wick = el('div', { className: 'candle__wick' });
     const body = el('div', { className: 'candle__body' });
-    const candle = el('div', { className: 'candle' }, glow, flame, wick, body);
+    const candle = el('div', { className: 'candle' }, glow, body, wick, flame);
     const count = el('div', { className: 'breath-count' }, '');
     const phaseLabel = el('div', { className: 'breath-phase' }, 'Light a candle, then begin');
     const roundLabel = el('div', { className: 'muted tiny' }, '');
