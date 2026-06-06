@@ -96,6 +96,12 @@ export interface Settings {
     brightness?: number; // 0..1
     motion?: number; // 0..1
   };
+  /** Candle (Trāṭaka) module preferences. */
+  candle?: {
+    lastRitualId?: string;
+    /** Custom watch: gaze/rest seconds + round count. */
+    custom?: { gazeSec: number; restSec: number; rounds: number };
+  };
 }
 
 export interface AthanorDB extends DBSchema {
