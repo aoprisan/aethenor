@@ -20,6 +20,11 @@ described below:
   plus a custom-ratio builder; Web Audio tone cues (rising/steady/falling),
   optional spoken cues, haptics; AudioContext unlock + Screen Wake Lock on
   start; one-time iOS silent-switch hint; "log to Record" after a session.
+- **Candle** — Trāṭaka fixed-gaze watch; a flickering CSS flame that snuffs for
+  eyes-closed *rest* phases (hold the afterimage); ritual presets plus a custom
+  gaze/rest/rounds builder; soft Web Audio bell cues (single bell opens the gaze,
+  two-tone turns you inward), optional spoken cues + haptics; Wake Lock; finite
+  rounds that complete themselves; "log to Record" after the watch.
 - **Record** — IndexedDB diary with the schema below; new/edit/delete; search +
   tag filters; streak + contribution-style heatmap; JSON export/import.
 - **Timing** — moon phase/illumination, current planetary hour + day ruler, and
@@ -113,6 +118,11 @@ athanor/
         ├── breath/          # animated guide, Web Audio/Speech cues, haptics,
         │   ├── breath.ts    #   wake lock, iOS silent-switch hint
         │   └── patterns.ts  # pattern definitions (box, 4-7-8, coherent, …)
+        ├── candle/          # Trāṭaka candle-gaze watch (CSS flame, bell cues)
+        │   ├── candle.ts    #   UI; gaze/rest stage, wake lock, log to Record
+        │   ├── session.ts   #   finite gaze/rest runner (self-completing)
+        │   ├── chime.ts     #   soft Web Audio bells + optional speech/haptics
+        │   └── rituals.ts   # ritual definitions (trāṭaka short/standard, …)
         ├── record/record.ts # IndexedDB diary: list/search/calendar/export
         ├── timing/timing.ts # suncalc moon + planetary hours (Chaldean)
         └── ai/hierophant.ts # scope picker + intents → Web Share / Copy egress

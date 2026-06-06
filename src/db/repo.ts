@@ -93,6 +93,7 @@ export async function saveSettings(patch: Partial<Settings>): Promise<Settings> 
     id: 'app',
     cues: patch.cues ? { ...current.cues!, ...patch.cues } : current.cues,
     breath: patch.breath ? { ...current.breath, ...patch.breath } : current.breath,
+    candle: patch.candle ? { ...current.candle, ...patch.candle } : current.candle,
   };
   const db = await getDB();
   await db.put('settings', next);
