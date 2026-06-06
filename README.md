@@ -13,9 +13,24 @@ no API keys, no account. Your data stays on your device and is yours to export.
 
 ## Status
 
-**Scaffold + design proposal.** Build/PWA/CI config and the app shell are in
-place; the three modules and the AI layer are stubbed pending design
-confirmation. See the three proposals below.
+**v1 implemented.** All three modules + the AI layer are built on the scaffold
+described below:
+
+- **Breath** — animated orb guide; presets (box, 4-7-8, coherent, nadi shodhana)
+  plus a custom-ratio builder; Web Audio tone cues (rising/steady/falling),
+  optional spoken cues, haptics; AudioContext unlock + Screen Wake Lock on
+  start; one-time iOS silent-switch hint; "log to Record" after a session.
+- **Record** — IndexedDB diary with the schema below; new/edit/delete; search +
+  tag filters; streak + contribution-style heatmap; JSON export/import.
+- **Timing** — moon phase/illumination, current planetary hour + day ruler, and
+  the day's full Chaldean-order hour table, from geolocation or manual coords.
+- **Hierophant** — pure prompt-builder (unit-tested) + scope picker + intents;
+  egress via Web Share (with iOS share-Shortcut hint and share-as-file) and an
+  always-present Copy fallback. No network calls, no keys.
+
+```bash
+npm test     # vitest — prompt-builder determinism/shape
+```
 
 ## Stack
 

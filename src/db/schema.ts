@@ -76,6 +76,12 @@ export interface Settings {
   };
   /** One-time hints the user has dismissed (iOS silent switch, iOS share, …). */
   dismissedHints?: string[];
+  /** Breath module preferences. */
+  breath?: {
+    lastPatternId?: string;
+    /** Custom pattern durations (seconds); 0 = phase omitted. */
+    custom?: { inhale: number; holdIn: number; exhale: number; holdOut: number };
+  };
 }
 
 export interface AthanorDB extends DBSchema {
