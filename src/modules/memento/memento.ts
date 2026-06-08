@@ -5,6 +5,7 @@ import {
   type Meditation,
 } from './meditations';
 import { CONTEMPLATIONS, contemplationAt } from './quotes';
+import { skull, hourglass } from './vanitas';
 import { MementoSession, type MementoState } from './session';
 import { CueEngine, type CueConfig } from '../breath/audio';
 import type { BreathPhase, BreathPhaseKind } from '../breath/patterns';
@@ -41,6 +42,16 @@ export function renderMemento(root: HTMLElement): (() => void) | void {
     page(
       'Memento Mori',
       'Watch one candle burn down with the breath. Remember you must die — and so, live.',
+    ),
+  );
+  // Vanitas emblems — a skull and hourglass flanking the old memento-mori motto.
+  root.append(
+    el(
+      'div',
+      { className: 'memento-emblems' },
+      el('span', { className: 'vanitas-wrap' }, skull()),
+      el('span', { className: 'memento-emblems__motto' }, 'hora fugit · mors certa'),
+      el('span', { className: 'vanitas-wrap' }, hourglass()),
     ),
   );
   const mount = el('div', {});
@@ -161,6 +172,12 @@ export function renderMemento(root: HTMLElement): (() => void) | void {
     const candle = el('div', { className: 'memento-candle' }, aura, holder, wax, wick, flame);
     candle.style.setProperty('--burn', '1');
 
+    // The candle stands before a skull — the vanitas tableau. The skull lifts
+    // out of the dark as the flame catches (see --lit below).
+    const skullBack = skull();
+    skullBack.classList.add('memento-skull');
+    const tableau = el('div', { className: 'memento-tableau' }, skullBack, candle);
+
     const count = el('div', { className: 'breath-count' }, '');
     const phaseLabel = el('div', { className: 'breath-phase' }, 'Light the candle, then begin');
 
@@ -172,7 +189,7 @@ export function renderMemento(root: HTMLElement): (() => void) | void {
     const stage = el(
       'div',
       { className: 'memento-stage' },
-      candle,
+      tableau,
       count,
       phaseLabel,
       quote,
@@ -213,6 +230,7 @@ export function renderMemento(root: HTMLElement): (() => void) | void {
 
     function resetStage(): void {
       candle.classList.remove('memento-candle--lit');
+      tableau.classList.remove('memento-tableau--lit');
       candle.style.setProperty('--burn', '1');
       aura.style.transitionDuration = '0.8s';
       aura.style.transform = 'scale(0.66)';
@@ -231,6 +249,7 @@ export function renderMemento(root: HTMLElement): (() => void) | void {
       if (isIOS()) toast('Silent mode off to hear the cues');
       cues!.update(cueConfig());
       candle.classList.add('memento-candle--lit');
+      tableau.classList.add('memento-tableau--lit');
       quoteSeed = Math.floor(Math.random() * CONTEMPLATIONS.length);
       shownQuoteIndex = -1;
       const total = meditation.totalSec;
@@ -253,9 +272,11 @@ export function renderMemento(root: HTMLElement): (() => void) | void {
         onState: (s) => reflectState(s),
         onComplete: (elapsed) => {
           session = null;
-          // Leave the candle spent — a burned-down stub, flame snuffed.
+          // Leave the candle spent — a burned-down stub, flame snuffed, and the
+          // skull sinking back into the dark.
           candle.style.setProperty('--burn', '0');
           candle.classList.remove('memento-candle--lit');
+          tableau.classList.remove('memento-tableau--lit');
           aura.style.transitionDuration = '1.2s';
           aura.style.transform = 'scale(0.66)';
           count.textContent = '';

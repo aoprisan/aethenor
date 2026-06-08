@@ -766,6 +766,34 @@ input[type='checkbox'] { accent-color: var(--accent); width: auto; }
 }
 
 /* --- Memento Mori --- */
+/* Vanitas emblems (skull · hourglass) — gilt line-engravings; colour flows in
+   through currentColor so they tarnish with the theme. */
+.vanitas { display: block; width: 100%; height: 100%; }
+.vanitas__socket { fill: currentColor; fill-opacity: 0.26; stroke: currentColor; stroke-width: 2.4; }
+
+/* The motto band beneath the page rule. */
+.memento-emblems {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  margin: -0.3rem 0 0.2rem;
+  color: var(--accent-dim);
+}
+.memento-emblems .vanitas-wrap {
+  width: 26px;
+  height: 28px;
+  display: inline-block;
+  filter: drop-shadow(0 0 8px rgba(var(--gold-rgb), 0.18));
+}
+.memento-emblems__motto {
+  font-family: var(--font-ui);
+  font-size: 0.66rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent-dim);
+}
+
 /* One candle burns down as the session elapses: the wax height tracks the time
    remaining (--burn, 1→0), and the wick, flame, and breathing aura ride the
    wax top down with it. A contemplation fades in and out beneath. */
@@ -782,12 +810,40 @@ input[type='checkbox'] { accent-color: var(--accent); width: auto; }
   background: radial-gradient(circle at 50% 30%, rgba(201, 162, 75, 0.045), var(--bg-sunken) 72%);
 }
 
+/* The vanitas tableau: the candle stands before a skull. */
+.memento-tableau {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+/* The skull behind the candle — faint in the dark, lifting out as the flame
+   catches it. Never burns down; it is the thing that remains. */
+.memento-skull {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 224px;
+  height: 246px;
+  transform: translate(-50%, -46%);
+  color: var(--accent-dim);
+  opacity: 0.14;
+  pointer-events: none;
+  z-index: 0;
+  filter: drop-shadow(0 0 22px rgba(var(--gold-rgb), 0.12));
+  transition: opacity 1.6s ease, color 1.6s ease;
+}
+.memento-tableau--lit .memento-skull {
+  opacity: 0.32;
+  color: var(--accent);
+}
+
 .memento-candle {
   --wax-full: 196px;
   --holder-h: 16px;
   /* Height of the wax top above the floor, shrinking as the candle burns. */
   --top: calc(var(--holder-h) + var(--wax-full) * var(--burn, 1));
   position: relative;
+  z-index: 1;
   width: 130px;
   height: 300px;
   margin: 0 auto;
