@@ -31,6 +31,21 @@ const HOURGLASS = `
   <path d="M36 50 V72" stroke-width="2"/>
 </svg>`;
 
+// The outline-only frame of the *draining* hourglass on the stage. Unlike the
+// static emblem above, this glass holds two sand chambers (DOM divs, drained via
+// the shared --burn variable) layered behind it — so the frame carries no sand
+// of its own, only the silhouette: caps, posts, and the twin funnels. Geometry
+// matches the chamber boxes in app.css (top triangle 12,14→52,14→32,50).
+const GLASS_FRAME = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 100"
+     class="vanitas vanitas--glassframe" fill="none" stroke="currentColor"
+     stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+  <path d="M10 6 H54 M10 94 H54"/>
+  <path d="M16 6 V14 M48 6 V14 M16 94 V86 M48 94 V86" stroke-opacity="0.5"/>
+  <path d="M12 14 L52 14 L32 50 Z"/>
+  <path d="M32 50 L52 86 L12 86 Z"/>
+</svg>`;
+
 function buildSvg(markup: string): SVGSVGElement {
   const parsed = new DOMParser().parseFromString(markup.trim(), 'image/svg+xml');
   return document.importNode(parsed.documentElement, true) as unknown as SVGSVGElement;
@@ -42,4 +57,8 @@ export function skull(): SVGSVGElement {
 
 export function hourglass(): SVGSVGElement {
   return buildSvg(HOURGLASS);
+}
+
+export function hourglassFrame(): SVGSVGElement {
+  return buildSvg(GLASS_FRAME);
 }

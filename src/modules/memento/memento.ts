@@ -4,8 +4,8 @@ import {
   customMeditation,
   type Meditation,
 } from './meditations';
-import { CONTEMPLATIONS, contemplationAt } from './quotes';
-import { skull, hourglass } from './vanitas';
+import { CONTEMPLATIONS } from './quotes';
+import { skull, hourglass, hourglassFrame } from './vanitas';
 import { MementoSession, type MementoState } from './session';
 import { CueEngine, type CueConfig } from '../breath/audio';
 import type { BreathPhase, BreathPhaseKind } from '../breath/patterns';
@@ -31,10 +31,64 @@ const AURA_SCALE: Record<BreathPhaseKind, number> = {
 
 const DEFAULT_CUSTOM = { minutes: 8, inhale: 6, exhale: 6 };
 
+// The contemplation turns on its own cadence — one line every twenty seconds —
+// independent of the session, so the words keep moving even before the candle
+// is lit. (Kept out of the pure quotes.ts so that module stays clock-free.)
+const QUOTE_MS = 20000;
+
 function mmss(total: number): string {
   const m = Math.floor(total / 60);
   const s = total % 60;
   return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+// --- Atmospheric particle factories (cosmetic, lit per-state via CSS) --------
+
+// Embers lifting off the flame. Each is seeded with a drift/size/timing so the
+// stream looks alive rather than a marching grid. Random is fine here — this is
+// the impure UI layer, never the tested math.
+function buildEmbers(count = 16): HTMLElement {
+  const wrap = el('div', { className: 'memento-candle__embers' });
+  for (let i = 0; i < count; i++) {
+    const e = el('span', { className: 'ember' });
+    const size = 2 + Math.random() * 3;
+    e.style.setProperty('--x', `${(Math.random() - 0.5) * 26}px`);
+    e.style.setProperty('--dx', `${(Math.random() - 0.5) * 40}px`);
+    e.style.setProperty('--size', `${size.toFixed(1)}px`);
+    e.style.setProperty('--dur', `${(3.4 + Math.random() * 3.6).toFixed(2)}s`);
+    e.style.setProperty('--delay', `${(Math.random() * 4).toFixed(2)}s`);
+    wrap.append(e);
+  }
+  return wrap;
+}
+
+// A slow field of gold dust drifting up through the whole tableau — depth, not
+// focus. Always present, very faint, the air of the room itself.
+function buildMotes(count = 26): HTMLElement {
+  const wrap = el('div', { className: 'memento-motes', ariaHidden: 'true' });
+  for (let i = 0; i < count; i++) {
+    const m = el('span', { className: 'mote' });
+    m.style.setProperty('--x', `${(Math.random() * 100).toFixed(1)}%`);
+    m.style.setProperty('--dx', `${(Math.random() - 0.5) * 60}px`);
+    m.style.setProperty('--rise', `${(220 + Math.random() * 220).toFixed(0)}px`);
+    m.style.setProperty('--max', (0.18 + Math.random() * 0.4).toFixed(2));
+    m.style.setProperty('--dur', `${(11 + Math.random() * 13).toFixed(1)}s`);
+    m.style.setProperty('--delay', `${(-Math.random() * 18).toFixed(1)}s`);
+    wrap.append(m);
+  }
+  return wrap;
+}
+
+// The draining glass: an outline frame over two sand chambers whose levels both
+// read the shared --burn (top empties, bottom fills) plus a falling stream that
+// shows only while the candle is alight and the sand is still running.
+function buildGlass(): HTMLElement {
+  const top = el('div', { className: 'memento-glass__chamber memento-glass__chamber--top' },
+    el('div', { className: 'memento-glass__sand' }));
+  const bot = el('div', { className: 'memento-glass__chamber memento-glass__chamber--bot' },
+    el('div', { className: 'memento-glass__sand' }));
+  const stream = el('div', { className: 'memento-glass__stream' });
+  return el('div', { className: 'memento-glass', ariaHidden: 'true' }, top, bot, stream, hourglassFrame());
 }
 
 export function renderMemento(root: HTMLElement): (() => void) | void {
@@ -61,6 +115,8 @@ export function renderMemento(root: HTMLElement): (() => void) | void {
   let cues: CueEngine | null = null;
   let settings: Settings;
   let meditation: Meditation = MEDITATIONS[0];
+  // Stops the ambient quote-rotation timer owned by build(); cleared on unmount.
+  let stopRotation: (() => void) | null = null;
 
   void init();
 
@@ -169,36 +225,45 @@ export function renderMemento(root: HTMLElement): (() => void) | void {
     const wick = el('div', { className: 'memento-candle__wick' });
     const wax = el('div', { className: 'memento-candle__wax' });
     const holder = el('div', { className: 'memento-candle__holder' });
-    const candle = el('div', { className: 'memento-candle' }, aura, holder, wax, wick, flame);
-    candle.style.setProperty('--burn', '1');
+    const smoke = el('div', { className: 'memento-candle__smoke' });
+    const embers = buildEmbers();
+    const candle = el('div', { className: 'memento-candle' }, aura, holder, wax, wick, flame, embers, smoke);
 
-    // The candle stands before a skull — the vanitas tableau. The skull lifts
-    // out of the dark as the flame catches (see --lit below).
+    // The candle stands before a skull, beside a draining hourglass — the
+    // vanitas tableau. Both skull and glass lift out of the dark as the flame
+    // catches; the sand falls in step with the wax. --burn lives on the tableau
+    // so candle and glass read the same single source of remaining time.
     const skullBack = skull();
     skullBack.classList.add('memento-skull');
-    const tableau = el('div', { className: 'memento-tableau' }, skullBack, candle);
+    const glass = buildGlass();
+    const tableau = el('div', { className: 'memento-tableau' }, skullBack, candle, glass);
+    tableau.style.setProperty('--burn', '1');
 
     const count = el('div', { className: 'breath-count' }, '');
     const phaseLabel = el('div', { className: 'breath-phase' }, 'Light the candle, then begin');
 
-    // contemplation quote, cross-faded as the session advances
+    // contemplation quote, cross-faded on its own twenty-second turn
     const quoteText = el('blockquote', { className: 'memento-quote__text' }, '');
+    const quoteDivider = el('div', { className: 'memento-quote__divider' });
     const quoteSource = el('cite', { className: 'memento-quote__source' }, '');
-    const quote = el('figure', { className: 'memento-quote' }, quoteText, quoteSource);
+    const quote = el('figure', { className: 'memento-quote' }, quoteText, quoteDivider, quoteSource);
 
     const stage = el(
       'div',
       { className: 'memento-stage' },
+      buildMotes(),
       tableau,
       count,
       phaseLabel,
       quote,
     );
 
-    let quoteSeed = 0;
-    let shownQuoteIndex = -1;
+    // The contemplation turns once every QUOTE_MS, on a clock of its own — not
+    // tied to the session, so the words move whether or not the candle burns.
+    let quoteIdx = 0;
+    let quoteTimer: number | null = null;
 
-    function setQuote(index: number, animate: boolean): void {
+    function showQuote(index: number, animate: boolean): void {
       const q = CONTEMPLATIONS[index];
       const apply = () => {
         quoteText.textContent = q.text;
@@ -212,6 +277,26 @@ export function renderMemento(root: HTMLElement): (() => void) | void {
       quote.classList.remove('memento-quote--in');
       window.setTimeout(apply, 600);
     }
+
+    function advanceQuote(): void {
+      quoteIdx = (quoteIdx + 1) % CONTEMPLATIONS.length;
+      showQuote(quoteIdx, true);
+    }
+
+    function startQuoteRotation(reseed: boolean): void {
+      stopQuoteRotation();
+      if (reseed) quoteIdx = Math.floor(Math.random() * CONTEMPLATIONS.length);
+      showQuote(quoteIdx, true);
+      quoteTimer = window.setInterval(advanceQuote, QUOTE_MS);
+    }
+
+    function stopQuoteRotation(): void {
+      if (quoteTimer != null) {
+        clearInterval(quoteTimer);
+        quoteTimer = null;
+      }
+    }
+    stopRotation = stopQuoteRotation;
 
     function setAura(kind: BreathPhaseKind, seconds: number): void {
       aura.style.transitionDuration = `${seconds}s`;
@@ -231,13 +316,21 @@ export function renderMemento(root: HTMLElement): (() => void) | void {
     function resetStage(): void {
       candle.classList.remove('memento-candle--lit');
       tableau.classList.remove('memento-tableau--lit');
-      candle.style.setProperty('--burn', '1');
+      tableau.style.setProperty('--burn', '1');
       aura.style.transitionDuration = '0.8s';
       aura.style.transform = 'scale(0.66)';
       count.textContent = '';
       phaseLabel.textContent = 'Light the candle, then begin';
-      quote.classList.remove('memento-quote--in');
-      shownQuoteIndex = -1;
+      // The contemplation keeps turning in the background — left untouched here.
+    }
+
+    // Snuff: a wisp of smoke lifts off the spent wick, then clears.
+    function snuff(): void {
+      candle.classList.remove('memento-candle--smoking');
+      // reflow so the animation re-triggers even on a back-to-back snuff
+      void candle.offsetWidth;
+      candle.classList.add('memento-candle--smoking');
+      window.setTimeout(() => candle.classList.remove('memento-candle--smoking'), 3800);
     }
 
     async function onStart(): Promise<void> {
@@ -250,8 +343,8 @@ export function renderMemento(root: HTMLElement): (() => void) | void {
       cues!.update(cueConfig());
       candle.classList.add('memento-candle--lit');
       tableau.classList.add('memento-tableau--lit');
-      quoteSeed = Math.floor(Math.random() * CONTEMPLATIONS.length);
-      shownQuoteIndex = -1;
+      // Begin the session on a fresh contemplation and realign the 20s cadence.
+      startQuoteRotation(true);
       const total = meditation.totalSec;
 
       session = new MementoSession(meditation, cues!, {
@@ -259,30 +352,24 @@ export function renderMemento(root: HTMLElement): (() => void) | void {
           setAura(phase.kind, phase.seconds);
           phaseLabel.textContent = PHASE_LABEL[phase.kind];
         },
-        onTick: (elapsed, remaining) => {
+        onTick: (_elapsed, remaining) => {
           count.textContent = mmss(remaining);
-          // Burn the candle down: wax remaining ∝ time remaining.
-          candle.style.setProperty('--burn', String(Math.max(0, remaining / total)));
-          const { index } = contemplationAt(elapsed, total, quoteSeed);
-          if (index !== shownQuoteIndex) {
-            setQuote(index, shownQuoteIndex !== -1);
-            shownQuoteIndex = index;
-          }
+          // Burn the candle down (and drain the glass): both read --burn ∝ time.
+          tableau.style.setProperty('--burn', String(Math.max(0, remaining / total)));
         },
         onState: (s) => reflectState(s),
         onComplete: (elapsed) => {
           session = null;
-          // Leave the candle spent — a burned-down stub, flame snuffed, and the
-          // skull sinking back into the dark.
-          candle.style.setProperty('--burn', '0');
+          // Leave the candle spent — a burned-down stub, flame snuffed with a
+          // curl of smoke, the glass run out, the skull sinking back into dark.
+          tableau.style.setProperty('--burn', '0');
           candle.classList.remove('memento-candle--lit');
           tableau.classList.remove('memento-tableau--lit');
           aura.style.transitionDuration = '1.2s';
           aura.style.transform = 'scale(0.66)';
           count.textContent = '';
-          quote.classList.remove('memento-quote--in');
-          shownQuoteIndex = -1;
           phaseLabel.textContent = 'The candle is spent';
+          snuff();
           offerLog(elapsed, true);
         },
       });
@@ -306,6 +393,7 @@ export function renderMemento(root: HTMLElement): (() => void) | void {
       session.stop();
       session = null;
       resetStage();
+      snuff();
       offerLog(elapsed, false);
     }
 
@@ -358,6 +446,8 @@ export function renderMemento(root: HTMLElement): (() => void) | void {
     );
     selectMeditation(meditation);
     resetStage();
+    // The contemplation turns from the moment the page is open, candle or not.
+    startQuoteRotation(true);
   }
 
   function buildCueSettings(): HTMLElement {
@@ -387,7 +477,7 @@ export function renderMemento(root: HTMLElement): (() => void) | void {
 
     return card(
       el('h2', {}, 'Cues'),
-      el('p', { className: 'muted tiny' }, 'Rising tone = inhale · falling = exhale. The quotes turn in silence.'),
+      el('p', { className: 'muted tiny' }, 'Rising tone = inhale · falling = exhale. A new contemplation turns every twenty seconds, in silence.'),
       field('Tone cues', wrap(tones)),
       field('Tone volume', tonesVol),
       ...speechRow,
@@ -399,6 +489,8 @@ export function renderMemento(root: HTMLElement): (() => void) | void {
   function cleanup(): void {
     session?.stop();
     session = null;
+    stopRotation?.();
+    stopRotation = null;
     cues?.close();
     cues = null;
   }
