@@ -161,6 +161,7 @@ export async function saveSettings(patch: Partial<Settings>): Promise<Settings> 
     breath: patch.breath ? { ...current.breath, ...patch.breath } : current.breath,
     drone: patch.drone ? { ...current.drone, ...patch.drone } : current.drone,
     candle: patch.candle ? { ...current.candle, ...patch.candle } : current.candle,
+    memento: patch.memento ? { ...current.memento, ...patch.memento } : current.memento,
   };
   const db = await getDB();
   await db.put('settings', next);

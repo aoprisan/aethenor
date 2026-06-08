@@ -131,6 +131,12 @@ export interface Settings {
     /** Custom watch: gaze/rest seconds + round count. */
     custom?: { gazeSec: number; restSec: number; rounds: number };
   };
+  /** Memento Mori meditation preferences. */
+  memento?: {
+    lastMeditationId?: string;
+    /** Custom meditation: total minutes + breath seconds. */
+    custom?: { minutes: number; inhale: number; exhale: number };
+  };
 }
 
 export interface AthanorDB extends DBSchema {
