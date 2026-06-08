@@ -130,11 +130,23 @@ body::after {
   z-index: 10;
 }
 
-.shell__nav a {
-  position: relative;
+/* Top-level nav entries: standalone links, or a group wrapper holding a button
+   + its pop-up menu. Both share the width evenly. */
+.shell__nav > a,
+.shell__group {
   flex: 1 1 auto;
   min-width: 0;
   max-width: 150px;
+}
+.shell__group {
+  position: relative;
+  display: flex;
+}
+
+.shell__nav a,
+.shell__group-btn {
+  position: relative;
+  width: 100%;
   min-height: 44px; /* comfortable touch target */
   display: flex;
   align-items: center;
@@ -151,10 +163,17 @@ body::after {
   border-radius: var(--radius);
   transition: color 0.35s var(--ease);
 }
-.shell__nav a:hover { color: var(--ink); }
+.shell__group-btn {
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.shell__nav a:hover,
+.shell__group-btn:hover { color: var(--ink); }
 
-/* A small glowing ember marks the current module. */
-.shell__nav a::after {
+/* A small glowing ember marks the current module / its group. */
+.shell__nav a::after,
+.shell__group-btn::after {
   content: '';
   position: absolute;
   left: 50%;
@@ -167,26 +186,67 @@ body::after {
   box-shadow: 0 0 7px 1px rgba(var(--gold-rgb), 0.8);
   transition: transform 0.35s var(--ease);
 }
-.shell__nav a[aria-current='page'] {
+.shell__nav a[aria-current='page'],
+.shell__group-btn[data-active],
+.shell__group-btn[aria-expanded='true'] {
   color: var(--accent);
   text-shadow: 0 0 14px rgba(var(--gold-rgb), 0.3);
 }
-.shell__nav a[aria-current='page']::after { transform: translateX(-50%) scale(1); }
+.shell__nav a[aria-current='page']::after,
+.shell__group-btn[data-active]::after {
+  transform: translateX(-50%) scale(1);
+}
 
-/* Phones: every label (incl. "Monochord"/"Hierophant") must fit one row without
-   wrapping or kissing the screen edges. Tighten type + tracking; let them share
-   the width evenly. */
+/* The pop-up menu for a group, floated above its button. */
+.shell__menu {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: max-content;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.35rem;
+  background: var(--bg-glass);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  backdrop-filter: blur(16px) saturate(1.2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 -18px 40px -22px rgba(0, 0, 0, 0.9);
+  z-index: 11;
+}
+.shell__menu[hidden] { display: none; }
+.shell__menu a {
+  width: auto;
+  max-width: none;
+  min-height: 40px;
+  padding: 0.5rem 0.9rem 0.5rem;
+  justify-content: flex-start;
+}
+.shell__menu a::after { bottom: 50%; left: 0.35rem; transform: translateY(50%) scale(0); }
+.shell__menu a[aria-current='page']::after { transform: translateY(50%) scale(1); }
+
+/* Phones: keep the three group buttons fitting one row without kissing the
+   screen edges. */
 @media (max-width: 520px) {
   .shell__nav {
     gap: 0;
     padding-left: calc(0.25rem + env(safe-area-inset-left));
     padding-right: calc(0.25rem + env(safe-area-inset-right));
   }
-  .shell__nav a {
-    max-width: none;
+  .shell__nav > a,
+  .shell__group { max-width: none; }
+  .shell__nav a,
+  .shell__group-btn {
     padding: 0.5rem 0.15rem 0.7rem;
-    font-size: 0.6rem;
-    letter-spacing: 0.03em;
+    font-size: 0.62rem;
+    letter-spacing: 0.05em;
+  }
+  .shell__menu a {
+    padding: 0.5rem 0.9rem 0.5rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.05em;
   }
 }
 
