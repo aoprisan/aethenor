@@ -12,14 +12,14 @@ import { renderTiming } from './modules/timing/timing';
 import { renderHierophant } from './modules/ai/hierophant';
 
 const routes: Route[] = [
-  { path: '/breath', label: 'Breath', render: renderBreath },
-  { path: '/candle', label: 'Candle', render: renderCandle },
-  { path: '/memento', label: 'Memento', render: renderMemento },
-  { path: '/monochord', label: 'Monochord', render: renderMonochord },
-  { path: '/record', label: 'Record', render: renderRecord },
-  { path: '/dream', label: 'Dreams', render: renderDream },
-  { path: '/timing', label: 'Timing', render: renderTiming },
-  { path: '/hierophant', label: 'Hierophant', render: renderHierophant },
+  { path: '/breath', label: 'Breath', group: 'Practice', render: renderBreath },
+  { path: '/candle', label: 'Candle', group: 'Practice', render: renderCandle },
+  { path: '/memento', label: 'Memento', group: 'Practice', render: renderMemento },
+  { path: '/monochord', label: 'Monochord', group: 'Practice', render: renderMonochord },
+  { path: '/record', label: 'Record', group: 'Journal', render: renderRecord },
+  { path: '/dream', label: 'Dreams', group: 'Journal', render: renderDream },
+  { path: '/timing', label: 'Timing', group: 'Oracle', render: renderTiming },
+  { path: '/hierophant', label: 'Hierophant', group: 'Oracle', render: renderHierophant },
 ];
 
 const app = document.getElementById('app');

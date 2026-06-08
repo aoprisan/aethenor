@@ -9,6 +9,7 @@
 export type Route = {
   path: string; // e.g. "/breath"
   label: string; // nav label
+  group?: string; // bottom-nav grouping; routes sharing a group collapse into one menu
   render: (root: HTMLElement) => void | (() => void); // returns optional cleanup
 };
 
